@@ -1,0 +1,11 @@
+dash-html-components
+dash-core-components
+dash_renderer
+dash
+gunicorn
+requests
+ujson
+email_validator
+google-cloud-tasks
+pandas
+google-cloud-firestore
