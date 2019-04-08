@@ -14,6 +14,14 @@ from google.protobuf import timestamp_pb2
 from pandas import date_range
 from ujson import dumps
 
+try:
+    import googleclouddebugger
+
+    googleclouddebugger.enable()
+except ImportError as e:
+    logging.error('Unable to import stackdriver debugger: ' + str(e))
+    pass
+
 db = firestore.Client()
 api_keys_ref = db.collection(u'api_keys').document(u'gvRhG4XnOHccmty4UoBU')
 
@@ -29,6 +37,34 @@ external_css = ["https://fonts.googleapis.com/css?family=VT323&amp;subset=latin-
 
 app = dash.Dash(__name__, external_css=external_css)
 server = app.server
+
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-137904877-1"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'UA-137904877-1');
+        </script>
+        {%metas%}
+        <title>Thems Facts</title>
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
 
 app.layout = html.Div(children=[
     html.H1('Thems Facts'),

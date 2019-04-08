@@ -9,3 +9,4 @@ email_validator
 google-cloud-tasks
 pandas
 google-cloud-firestore
+google-python-cloud-debugger
