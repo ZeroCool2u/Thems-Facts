@@ -431,3 +431,14 @@ there.
 
 /* Larger than Desktop HD */
 @media (min-width: 1200px) {}
+
+*[data-dash-is-loading="true"] {
+    visibility: hidden;
+    background-color: black;
+}
+
+*[data-dash-is-loading="true"]::before {
+    content: "Charging the low orbit ion cannon...";
+    background-color: black;
+    visibility: visible;
+}

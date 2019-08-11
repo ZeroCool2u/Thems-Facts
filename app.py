@@ -4,38 +4,51 @@ from datetime import datetime as dt
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import gc
+import time
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from google.cloud import firestore
-from google.cloud import tasks_v2beta3
+from google.cloud import tasks as gtasks
 from google.cloud.exceptions import NotFound
 from google.protobuf import timestamp_pb2
 from pandas import date_range
 from ujson import dumps
 
-try:
-    import googleclouddebugger
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
-    googleclouddebugger.enable()
-except ImportError as e:
-    logging.error('Unable to import stackdriver debugger: ' + str(e))
-    pass
 
-db = firestore.Client()
-api_keys_ref = db.collection(u'api_keys').document(u'gvRhG4XnOHccmty4UoBU')
+def gcp_support() -> dict:
+    try:
+        import googleclouddebugger
 
-try:
-    doc = api_keys_ref.get()
-    API_KEYS = doc.to_dict()
-    logging.info('API Keys successfully retrieved.')
-except NotFound as e:
-    API_KEYS = {}
-    logging.error('The API keys could not be retrieved from Firestore!')
+        googleclouddebugger.enable()
+    except ImportError as e:
+        logging.error(f'Unable to import and enable stackdriver debugger: {str(e)}')
+        pass
+
+    try:
+        db = firestore.Client()
+        api_keys_ref = db.collection(u'api_keys').document(u'gvRhG4XnOHccmty4UoBU')
+        doc = api_keys_ref.get()
+        api_keys = doc.to_dict()
+        logging.info('API Keys successfully retrieved.')
+        return api_keys
+    except NotFound as e:
+        api_keys = {'twilio_sid': 'TWILIO_SID_NOT_FOUND'}
+        logging.error(f'The API keys could not be retrieved from Firestore: {str(e)}')
+        return api_keys
+    except Exception as e:
+        api_keys = {'twilio_sid': 'TWILIO_SID_NOT_FOUND'}
+        logging.error(f'Firestore client failed to init. The front end will run in local only mode: {str(e)}')
+        return api_keys
+
+
+API_KEYS = gcp_support()
 
 external_css = ["https://fonts.googleapis.com/css?family=VT323&amp;subset=latin-ext"]
 
-app = dash.Dash(__name__, external_css=external_css)
+app = dash.Dash(__name__, external_stylesheets=external_css)
 server = app.server
 
 app.index_string = '''
@@ -66,53 +79,59 @@ app.index_string = '''
 </html>
 '''
 
-app.layout = html.Div(children=[
-    html.H1('Thems Facts'),
-    html.Br(),
-    dcc.Dropdown(id='fact-dropdown',
-                 options=[
-                     {'label': 'Random Fact or Quote', 'value': 'random'},
-                     {'label': 'Kanye Quote', 'value': '/kanye'},
-                     {'label': 'Cat Fact', 'value': '/cat'},
-                     {'label': 'Design Quote', 'value': '/design'},
-                     {'label': 'Inspirational Quote', 'value': '/inspirational'},
-                     {'label': 'Simpsons Quote', 'value': '/simpsons'}
-                 ],
-                 value='random'),
-    html.Br(),
-    dcc.DatePickerRange(id='date-range-picker',
-                        min_date_allowed=dt.now(),
-                        start_date=dt.now()),
-    html.Br(),
-    html.Br(),
-    dcc.Input(id='target-name',
-              type='text',
-              placeholder='Target Name',
-              required=True),
-    html.Br(),
-    html.Br(),
-    dcc.Input(id='target-phone-number',
-              inputmode='tel',
-              type='tel',
-              placeholder='2128675309',
-              required=True,
-              pattern="[0-9]{10}"),
-    html.Br(),
-    html.Div(id='output-notification'),
-    html.Br(),
-    html.Button('Send the facts!',
-                id='submit-button')
+app.layout = dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
+    html.Div(id='container', children=[
+        html.H1('Thems Facts'),
+        html.Br(),
+        dcc.Dropdown(id='fact-dropdown',
+                     options=[
+                         {'label': 'Random Fact or Quote or GIF', 'value': 'random'},
+                         {'label': 'Random GIF', 'value': '/random_gif'},
+                         {'label': 'Kanye Quote', 'value': '/kanye'},
+                         {'label': 'Cat Fact', 'value': '/cat'},
+                         {'label': 'Design Quote', 'value': '/design'},
+                         {'label': 'Inspirational Quote', 'value': '/inspirational'},
+                         {'label': 'Simpsons Quote', 'value': '/simpsons'},
+                         {'label': 'Ron Swanson Quote', 'value': '/swanson'},
+                         {'label': 'Chuck Norris Facts', 'value': '/norris'},
+                         {'label': 'Embarrassing Trump Quotes', 'value': '/shitty-trump'}
+                     ],
+                     value='random'),
+        html.Br(),
+        dcc.DatePickerRange(id='date-range-picker',
+                            min_date_allowed=dt.now(),
+                            start_date=dt.now()),
+        html.Br(),
+        html.Br(),
+        dcc.Input(id='target-name',
+                  type='text',
+                  placeholder='Target Name',
+                  required=True),
+        html.Br(),
+        html.Br(),
+        dcc.Input(id='target-phone-number',
+                  inputMode='tel',
+                  type='tel',
+                  placeholder='2128675309',
+                  required=True,
+                  pattern="[0-9]{10}"),
+        html.Br(),
+        html.Div(id='output-notification'),
+        html.Br(),
+        html.Button('Send the facts!',
+                    id='submit-button')
 
-])
+    ])])
 
 
-def create_fact_task(task: dict, target_phone: str, target_name: str, fact_type: str, send_time: dt,
+def create_fact_task(task: dict, target_phone: str, target_name: str, fact_type: str, send_time: dt, task_queue_size=1,
                      first_task: bool = False) -> dict:
     payload = {'fact_type': fact_type,
                'target_name': target_name,
                'target_phone': target_phone,
                'account_sid': API_KEYS['twilio_sid'],
-               'is_first_task': first_task}
+               'is_first_task': first_task,
+               'task_queue_size': task_queue_size}
 
     # The API expects a payload of type bytes.
     converted_payload = dumps(payload).encode()
@@ -143,11 +162,12 @@ def schedule_fact_tasks(target_phone: str, target_name: str, fact_type: str, sta
                 'relative_uri': '/send'
             }
         }
-        tasks.append(create_fact_task(task, target_phone, target_name, fact_type, send_time=d, first_task=FIRST_FLAG))
+        tasks.append(create_fact_task(task, target_phone, target_name, fact_type, send_time=d, task_queue_size=len(dr),
+                                      first_task=FIRST_FLAG))
         FIRST_FLAG = False
 
     # Create a client.
-    client = tasks_v2beta3.CloudTasksClient()
+    client = gtasks.CloudTasksClient()
 
     project = 'facts-sender'
     queue = 'facts-queue'
@@ -177,15 +197,13 @@ def schedule_fact_tasks(target_phone: str, target_name: str, fact_type: str, sta
      State('target-phone-number', 'value')])
 def update_output(n_clicks: int, fact_type: str, start_date: dt, end_date: dt, target_name: str,
                   target_phone: str) -> str:
-    if n_clicks == None or start_date == None or end_date == None:
+    if n_clicks is None or start_date is None or end_date is None:
         raise PreventUpdate
 
     if not target_name or not target_phone:
         return 'Yeah, gonna need a name and phone number.'
 
     n_facts = schedule_fact_tasks(target_phone, target_name, fact_type, start_date, end_date)
-
-    gc.collect()
 
     return 'Your ' + str(n_facts) + ' facts have been scheduled!'
 
@@ -206,7 +224,12 @@ def update_calendar(n_clicks: int, start_date: str) -> (dt, dt):
         return start_date, start_date
 
 
+@app.callback([Output('container', 'children')],
+              [Input('submit-button', 'n_clicks')])
+def show_loading(n_clicks: int):
+    time.sleep(3.25)
+    pass
+
+
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
     app.run_server(debug=False)
