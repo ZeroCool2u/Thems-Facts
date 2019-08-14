@@ -1,10 +1,11 @@
 import logging
+import os
 from datetime import datetime as dt
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import time
+import phonenumbers
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from google.cloud import firestore
@@ -16,6 +17,10 @@ from ujson import dumps
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+
+if not os.getenv('GAE_ENV', '').startswith('standard'):
+    os.environ[
+        'GOOGLE_APPLICATION_CREDENTIALS'] = r'/home/theo/PycharmProjects/thems_facts/front_end_service/facts-sender-owner.json'
 
 
 def gcp_support() -> dict:
@@ -79,10 +84,10 @@ app.index_string = '''
 </html>
 '''
 
-app.layout = dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
-    html.Div(id='container', children=[
-        html.H1('Thems Facts'),
-        html.Br(),
+app.layout = html.Div(id='container', children=[
+    html.H1('Thems Facts'),
+    html.Br(),
+    dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
         dcc.Dropdown(id='fact-dropdown',
                      options=[
                          {'label': 'Random Fact or Quote or GIF', 'value': 'random'},
@@ -203,9 +208,22 @@ def update_output(n_clicks: int, fact_type: str, start_date: dt, end_date: dt, t
     if not target_name or not target_phone:
         return 'Yeah, gonna need a name and phone number.'
 
-    n_facts = schedule_fact_tasks(target_phone, target_name, fact_type, start_date, end_date)
+    try:
+        target_phone_number = phonenumbers.parse(target_phone, "US")
 
-    return 'Your ' + str(n_facts) + ' facts have been scheduled!'
+    except phonenumbers.NumberParseException as e:
+        logging.info(
+            f"An invalid phone number was supplied: {target_phone}"
+            f" and caused the following exception to be thrown: {str(e)}")
+        return f'You supplied {target_phone} as your phone number and we\'re pretty sure that\'s not a valid number.'
+
+    if phonenumbers.is_possible_number(target_phone_number) and phonenumbers.is_valid_number(target_phone_number):
+        n_facts = schedule_fact_tasks(target_phone, target_name, fact_type, start_date, end_date)
+
+        return 'Your ' + str(n_facts) + ' facts have been scheduled!'
+
+    else:
+        return f'You supplied {target_phone} as your phone number and we\'re pretty sure that\'s not a valid number.'
 
 
 @app.callback([Output('date-range-picker', 'min_date_allowed'),
@@ -213,9 +231,13 @@ def update_output(n_clicks: int, fact_type: str, start_date: dt, end_date: dt, t
               [Input('submit-button', 'n_clicks')],
               [State('date-range-picker', 'start_date')])
 def update_calendar(n_clicks: int, start_date: str) -> (dt, dt):
+    if n_clicks is None or start_date is None:
+        raise PreventUpdate
+
     now: dt = dt.now()
+
     if len(start_date) > 11:
-        start_date: dt = dt.strptime(start_date, "%Y-%m-%d %H:%M:%S.%f")
+        start_date: dt = dt.strptime(start_date, "%Y-%m-%dT%H:%M:%S.%f")
     else:
         start_date: dt = dt.strptime(start_date, "%Y-%m-%d")
     if start_date <= now:
@@ -223,13 +245,6 @@ def update_calendar(n_clicks: int, start_date: str) -> (dt, dt):
     else:
         return start_date, start_date
 
-
-@app.callback([Output('container', 'children')],
-              [Input('submit-button', 'n_clicks')])
-def show_loading(n_clicks: int):
-    time.sleep(3.25)
-    pass
-
-
-if __name__ == '__main__':
-    app.run_server(debug=False)
+# Uncomment this is running locally.
+# if __name__ == '__main__':
+#     app.run_server(debug=True)

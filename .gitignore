@@ -173,3 +173,4 @@ fabric.properties
 .idea/httpRequests
 !/deploy_frontend.sh
 !/requirements.txt
+/facts-sender-owner.json
