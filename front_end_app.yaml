@@ -1,6 +1,6 @@
 runtime: python37
 instance_class: F2
-entrypoint: gunicorn -w 2 app:server
+entrypoint: gunicorn -w 3 app:server
 service: default
 
 handlers:

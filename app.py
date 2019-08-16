@@ -84,49 +84,55 @@ app.index_string = '''
 </html>
 '''
 
-app.layout = html.Div(id='container', children=[
-    html.H1('Thems Facts'),
-    html.Br(),
-    dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
-        dcc.Dropdown(id='fact-dropdown',
-                     options=[
-                         {'label': 'Random Fact or Quote or GIF', 'value': 'random'},
-                         {'label': 'Random GIF', 'value': '/random_gif'},
-                         {'label': 'Kanye Quote', 'value': '/kanye'},
-                         {'label': 'Cat Fact', 'value': '/cat'},
-                         {'label': 'Design Quote', 'value': '/design'},
-                         {'label': 'Inspirational Quote', 'value': '/inspirational'},
-                         {'label': 'Simpsons Quote', 'value': '/simpsons'},
-                         {'label': 'Ron Swanson Quote', 'value': '/swanson'},
-                         {'label': 'Chuck Norris Facts', 'value': '/norris'},
-                         {'label': 'Embarrassing Trump Quotes', 'value': '/shitty-trump'}
-                     ],
-                     value='random'),
-        html.Br(),
-        dcc.DatePickerRange(id='date-range-picker',
-                            min_date_allowed=dt.now(),
-                            start_date=dt.now()),
-        html.Br(),
-        html.Br(),
-        dcc.Input(id='target-name',
-                  type='text',
-                  placeholder='Target Name',
-                  required=True),
-        html.Br(),
-        html.Br(),
-        dcc.Input(id='target-phone-number',
-                  inputMode='tel',
-                  type='tel',
-                  placeholder='2128675309',
-                  required=True,
-                  pattern="[0-9]{10}"),
-        html.Br(),
-        html.Div(id='output-notification'),
-        html.Br(),
-        html.Button('Send the facts!',
-                    id='submit-button')
+app.layout = html.Div(id='app_container', className='container', children=[
+    html.Div(className='row', children=[
+        html.Div(className='column', children=[
+            html.H1('Thems Facts'),
+            html.Br(),
+            dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
+                dcc.Dropdown(id='fact-dropdown',
+                             options=[
+                                 {'label': 'Random Fact or Quote or GIF', 'value': 'random'},
+                                 {'label': 'Random GIF', 'value': '/random_gif'},
+                                 {'label': 'Kanye Quote', 'value': '/kanye'},
+                                 {'label': 'Cat Fact', 'value': '/cat'},
+                                 {'label': 'Design Quote', 'value': '/design'},
+                                 {'label': 'Inspirational Quote', 'value': '/inspirational'},
+                                 {'label': 'Simpsons Quote', 'value': '/simpsons'},
+                                 {'label': 'Ron Swanson Quote', 'value': '/swanson'},
+                                 {'label': 'Chuck Norris Facts', 'value': '/norris'},
+                                 {'label': 'Embarrassing Trump Quotes', 'value': '/shitty-trump'}
+                             ],
+                             value='random'),
+                html.Br(),
+                dcc.DatePickerRange(id='date-range-picker',
+                                    min_date_allowed=dt.now(),
+                                    start_date=dt.now()),
+                html.Br(),
+                html.Br(),
+                dcc.Input(id='target-name',
+                          type='text',
+                          placeholder='Target Name',
+                          required=True),
+                html.Br(),
+                html.Br(),
+                dcc.Input(id='target-phone-number',
+                          inputMode='tel',
+                          type='tel',
+                          placeholder='2128675309',
+                          required=True,
+                          pattern="[0-9]{10}"),
+                html.Br(),
+                html.Div(id='output-notification'),
+                html.Br(),
+                html.Button('Send the facts!',
+                            id='submit-button')
 
-    ])])
+            ])
+
+        ])
+    ])
+])
 
 
 def create_fact_task(task: dict, target_phone: str, target_name: str, fact_type: str, send_time: dt, task_queue_size=1,
