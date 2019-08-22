@@ -86,8 +86,14 @@ app.index_string = '''
 
 app.layout = html.Div(id='app_container', className='container', children=[
     html.Div(className='row', children=[
-        html.Div(className='column', children=[
+        html.Div(className='column', style={'textAlign': 'center'}, children=[
             html.H1('Thems Facts'),
+            html.Hr(),
+            html.H4(
+                """Select the kind of information you'd like to have sent to your target or just set it to random. 
+                Then give your target a name and a phone number where they can be reached.
+                 Now, subtly suggest to your target that someone else has signed them up for facts 
+                 and let chaos reign."""),
             html.Br(),
             dcc.Loading(id='loader', type='cube', fullscreen=False, color='#32CD32', children=[
                 dcc.Dropdown(id='fact-dropdown',
@@ -128,7 +134,17 @@ app.layout = html.Div(id='app_container', className='container', children=[
                 html.Button('Send the facts!',
                             id='submit-button')
 
-            ])
+            ]),
+            html.Hr(),
+            html.Div(children=[
+                html.H2('Unsolicited User Testimonials:'),
+                html.H4('''"This isn't what I thought you meant when you said you were building an app. " - Mel'''),
+                html.H4('''"What do you mean a billion facts per second?" - Stu'''),
+                html.H4('''"Why's it called 'Thems Facts'? Most of these are just quotes." - Katherine'''),
+                html.H4('''"I'm blocking this number." - Mark'''),
+                html.H4('''"Hey wait, no really, please, you gotta stop." - Mij'''),
+                html.H4('''"3 years!?" - Jim'''),
+            ], style={'textAlign': 'center'})
 
         ])
     ])
