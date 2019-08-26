@@ -144,6 +144,7 @@ app.layout = html.Div(id='app_container', className='container', children=[
                 html.H4('''"I'm blocking this number." - Mark'''),
                 html.H4('''"Hey wait, no really, please, you gotta stop." - Mij'''),
                 html.H4('''"3 years!?" - Jim'''),
+                html.H4('''"Wtf is this you weirdo." - Alex's Sister''')
             ], style={'textAlign': 'center'})
 
         ])
