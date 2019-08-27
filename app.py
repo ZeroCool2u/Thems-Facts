@@ -107,7 +107,8 @@ app.layout = html.Div(id='app_container', className='container', children=[
                                  {'label': 'Simpsons Quote', 'value': '/simpsons'},
                                  {'label': 'Ron Swanson Quote', 'value': '/swanson'},
                                  {'label': 'Chuck Norris Facts', 'value': '/norris'},
-                                 {'label': 'Embarrassing Trump Quotes', 'value': '/shitty-trump'}
+                                 {'label': 'Embarrassing Trump Quotes', 'value': '/shitty-trump'},
+                                 {'label': 'Dad Jokes', 'value': '/dad_joke'}
                              ],
                              value='random'),
                 html.Br(),
