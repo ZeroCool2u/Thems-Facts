@@ -270,6 +270,6 @@ def update_calendar(n_clicks: int, start_date: str) -> (dt, dt):
     else:
         return start_date, start_date
 
-# Uncomment this is running locally.
+# Uncomment this if running locally.
 # if __name__ == '__main__':
 #     app.run_server(debug=True)
