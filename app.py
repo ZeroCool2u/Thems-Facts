@@ -16,7 +16,7 @@ from pandas import date_range
 from ujson import dumps
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+                    datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.WARNING)
 
 if not os.getenv('GAE_ENV', '').startswith('standard'):
     os.environ[
