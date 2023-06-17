@@ -1,10 +1,7 @@
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import logging
 import os
 import phonenumbers
-from dash.dependencies import Input, Output, State
+from dash import Dash, html, dcc, Output, Input, State
 from dash.exceptions import PreventUpdate
 from datetime import datetime as dt
 from google.cloud import firestore
@@ -23,13 +20,6 @@ if not os.getenv('GAE_ENV', '').startswith('standard'):
 
 
 def gcp_support() -> dict:
-    try:
-        import googleclouddebugger
-
-        googleclouddebugger.enable()
-    except ImportError as e:
-        logging.error(f'Unable to import and enable stackdriver debugger: {str(e)}')
-        pass
 
     try:
         db = firestore.Client()
@@ -52,7 +42,7 @@ API_KEYS = gcp_support()
 
 external_css = ["https://fonts.googleapis.com/css?family=VT323&amp;subset=latin-ext"]
 
-app = dash.Dash(__name__, external_stylesheets=external_css)
+app = Dash(__name__, external_stylesheets=external_css)
 server = app.server
 
 app.index_string = '''
