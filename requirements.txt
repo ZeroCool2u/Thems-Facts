@@ -1,7 +1,7 @@
 dash
 gunicorn
 requests
-ujson
+orjson
 email_validator
 google-cloud-tasks
 pandas

@@ -8,8 +8,8 @@ from google.cloud import firestore
 from google.cloud import tasks as gtasks
 from google.cloud.exceptions import NotFound
 from google.protobuf import timestamp_pb2
+from orjson import dumps
 from pandas import date_range
-from ujson import dumps
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.WARNING)
