@@ -1,13 +1,12 @@
-import logging
-import os
-from datetime import datetime as dt
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import logging
+import os
 import phonenumbers
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from datetime import datetime as dt
 from google.cloud import firestore
 from google.cloud import tasks as gtasks
 from google.cloud.exceptions import NotFound
@@ -60,14 +59,15 @@ app.index_string = '''
 <!DOCTYPE html>
 <html>
     <head>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-137904877-1"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'UA-137904877-1');
-        </script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9C1SZ59XE4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-9C1SZ59XE4');
+</script>
         {%metas%}
         <title>Thems Facts</title>
         {%favicon%}
