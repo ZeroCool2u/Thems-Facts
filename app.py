@@ -5,7 +5,7 @@ from dash import Dash, html, dcc, Output, Input, State
 from dash.exceptions import PreventUpdate
 from datetime import datetime as dt
 from google.cloud import firestore
-from google.cloud import tasks as gtasks
+from google.cloud import tasks_v2 as gtasks
 from google.cloud.exceptions import NotFound
 from google.protobuf import timestamp_pb2
 from orjson import dumps
@@ -178,7 +178,7 @@ def schedule_fact_tasks(target_phone: str, target_name: str, fact_type: str, sta
         # Construct the request body.
         task = {
             'app_engine_http_request': {  # Specify the type of request.
-                'http_method': 'POST',
+                'http_method': gtasks.HttpMethod.POST,
                 'relative_uri': '/send'
             }
         }
@@ -193,16 +193,16 @@ def schedule_fact_tasks(target_phone: str, target_name: str, fact_type: str, sta
     queue = 'facts-queue'
     location = 'us-east4'
     # Construct the fully qualified queue name.
-    parent = client.queue_path(project, location, queue)
+    parent = client.queue_path(project=project, location=location, queue=queue)
 
     for t in tasks:
         try:
             # Use the client to build and send the task.
-            response = client.create_task(parent, t)
+            response = client.create_task(parent=parent, task=t)
             logging.info('Task creation response: ' + str(response.name))
 
         except Exception as e:
-            logging.warning('Exception while scheduling task: ' + str(e))
+            logging.error('Exception while scheduling task: ' + str(e))
 
     return len(tasks)
 
