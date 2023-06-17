@@ -154,7 +154,7 @@ def create_fact_task(task: dict, target_phone: str, target_name: str, fact_type:
                'task_queue_size': task_queue_size}
 
     # The API expects a payload of type bytes.
-    converted_payload = dumps(payload).encode()
+    converted_payload = dumps(payload)
 
     # Add the payload to the request.
     task['app_engine_http_request']['body'] = converted_payload
