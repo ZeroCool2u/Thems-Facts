@@ -3,7 +3,7 @@ gunicorn
 requests
 orjson
 email_validator
-google-cloud-tasks
+google-cloud-tasks<2.0.0
 pandas
 google-cloud-firestore
 phonenumbers
