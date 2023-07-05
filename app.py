@@ -180,7 +180,9 @@ def schedule_fact_tasks(target_phone: str, target_name: str, fact_type: str, sta
             'app_engine_http_request': {  # Specify the type of request.
                 'http_method': 'POST',
                 'relative_uri': '/send',
-                'content-type': 'application/json'
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
             }
         }
         tasks.append(create_fact_task(task, target_phone, target_name, fact_type, send_time=d, task_queue_size=len(dr),
